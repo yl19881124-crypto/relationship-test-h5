@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MobileFrame from './components/MobileFrame';
 import { QUESTIONS } from './data/questions';
 import { RELATION_RESULTS } from './data/results';
@@ -16,17 +16,33 @@ const loadingSteps = [
 
 const optionStickers = ['🫧', '💘', '🎀', '🪄'];
 const previewFlavorLabels = ['暧昧浓度', '稳稳安心值', '心动甜度', '上头值'];
+const AUTO_NEXT_DELAY = 280;
 
 function App() {
   const [stage, setStage] = useState<Stage>('home');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
+  const autoNextTimerRef = useRef<number | null>(null);
 
   const evaluation = useMemo(() => evaluateAnswers(answers), [answers]);
   const result = RELATION_RESULTS[evaluation.resultId];
   const indexes = getRelationshipIndexes(evaluation.snapshot.normalized);
+  const currentQuestionId = QUESTIONS[currentQuestion].id;
+  const selectedOptionId = answers[currentQuestionId] ?? null;
+
+  const clearAutoNextTimer = () => {
+    if (autoNextTimerRef.current) {
+      window.clearTimeout(autoNextTimerRef.current);
+      autoNextTimerRef.current = null;
+    }
+    setIsAutoAdvancing(false);
+  };
+
+  useEffect(() => {
+    return () => clearAutoNextTimer();
+  }, []);
 
   useEffect(() => {
     if (stage !== 'loading') return;
@@ -47,29 +63,35 @@ function App() {
   }, [stage]);
 
   const restart = () => {
+    clearAutoNextTimer();
     setAnswers({});
     setCurrentQuestion(0);
-    setSelectedOptionId(null);
     setStage('home');
   };
 
   const onAnswer = (optionId: string) => {
-    if (selectedOptionId) return;
+    if (isAutoAdvancing) return;
 
-    setSelectedOptionId(optionId);
-    window.setTimeout(() => {
-      const questionId = QUESTIONS[currentQuestion].id;
-      setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+    setAnswers((prev) => ({ ...prev, [currentQuestionId]: optionId }));
+    setIsAutoAdvancing(true);
 
+    autoNextTimerRef.current = window.setTimeout(() => {
       if (currentQuestion >= QUESTIONS.length - 1) {
         setStage('loading');
-        setSelectedOptionId(null);
+        setIsAutoAdvancing(false);
         return;
       }
 
       setCurrentQuestion((prev) => prev + 1);
-      setSelectedOptionId(null);
-    }, 180);
+      setIsAutoAdvancing(false);
+    }, AUTO_NEXT_DELAY);
+  };
+
+  const onPrevQuestion = () => {
+    if (currentQuestion === 0) return;
+
+    clearAutoNextTimer();
+    setCurrentQuestion((prev) => Math.max(prev - 1, 0));
   };
 
   return (
@@ -107,7 +129,7 @@ function App() {
             >
               🎉 开始玩，测关系
             </button>
-            <p className="text-center text-xs text-slate-400">用时约 2 分钟 · 无需登录 · 纯娱乐更上头</p>
+            <p className="text-center text-xs text-slate-400">答题免费，完整结果可1元解锁。</p>
           </div>
         </div>
       )}
@@ -125,7 +147,16 @@ function App() {
                 style={{ width: `${((currentQuestion + 1) / QUESTIONS.length) * 100}%` }}
               />
             </div>
-            <p className="text-[11px] text-slate-400">别想太久，第一反应通常就是你们关系的真实弹幕。</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] text-slate-400">别想太久，第一反应通常就是你们关系的真实弹幕。</p>
+              <button
+                onClick={onPrevQuestion}
+                disabled={currentQuestion === 0}
+                className="shrink-0 rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                上一题
+              </button>
+            </div>
           </div>
 
           <div className="rounded-3xl border border-white/85 bg-white/85 p-5 shadow-[0_10px_35px_rgba(30,41,59,0.08)] animate-enter-up">
@@ -179,29 +210,42 @@ function App() {
 
       {stage === 'preview' && (
         <div className="space-y-5 py-4 animate-enter-up">
-          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">免费初判 · 先看一点点</p>
+          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">结果已生成 · 待解锁</p>
           <div className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_12px_30px_rgba(124,58,237,0.12)]">
-            <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">你们现在像</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-800">{result.subtitle}</h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">{result.freePreview}</p>
+            <h2 className="text-2xl font-black text-slate-800">你的隐藏关系已经生成</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">
+              系统已经识别出你和TA的关系真名。<br />这不是普通关系，而是一种很典型的隐藏相处模式。
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            {indexes.map((item, idx) => (
-              <IndexBar key={item.key} label={previewFlavorLabels[idx] ?? item.key} value={item.value} />
-            ))}
+          <div className="rounded-3xl border border-violet-200 bg-violet-50/80 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-violet-500">模糊结果卡</p>
+            <div className="mt-3 space-y-2 text-sm text-slate-700">
+              <p>你和TA的隐藏关系：？？？？？？型</p>
+              <p>你们的双人角色：已生成</p>
+              <p>一句话暴击：已生成</p>
+              <p>专属关系海报：已生成</p>
+            </div>
           </div>
 
-          <p className="rounded-2xl border border-dashed border-violet-300 bg-violet-50/70 p-3 text-sm text-violet-600">🧩 剧透边角料：{result.teaser}</p>
+          <div className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-slate-400">已生成检测项</p>
+            <ul className="mt-3 space-y-2 text-sm text-slate-600">
+              <li>✅ 已识别关系真名</li>
+              <li>✅ 已生成双人角色</li>
+              <li>✅ 已生成一句话暴击</li>
+              <li>✅ 已生成专属关系海报</li>
+            </ul>
+          </div>
 
           <div className="space-y-2 rounded-3xl border border-violet-200 bg-gradient-to-r from-fuchsia-100/80 via-violet-100/70 to-sky-100/80 p-4 shadow-[0_14px_28px_rgba(139,92,246,0.18)]">
             <button
-              onClick={() => setStage('full')}
+              onClick={() => setStage('poster')}
               className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-5 py-4 text-base font-black text-white shadow-[0_8px_20px_rgba(124,58,237,0.35)] active:scale-[0.99]"
             >
-              🔓 1元解锁关系真名 + 双人关系海报
+              1元解锁关系真名 + 双人关系海报
             </button>
-            <p className="text-center text-xs text-violet-500">很多人都说：看到最终结果会忍不住转给TA</p>
+            <p className="text-center text-xs text-violet-500">支付后立即查看，可保存海报。</p>
           </div>
         </div>
       )}
@@ -240,12 +284,6 @@ function App() {
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{result.actionAdvice}</p>
           </section>
 
-          <button
-            onClick={() => setStage('poster')}
-            className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-4 py-3 text-sm font-black text-white"
-          >
-            🖼️ 查看关系海报
-          </button>
           <button onClick={restart} className="w-full rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-xs text-slate-500">
             重新测试
           </button>
@@ -277,6 +315,12 @@ function App() {
             className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-4 py-3 text-base font-black text-white shadow-[0_12px_24px_rgba(124,58,237,0.35)]"
           >
             📸 保存海报
+          </button>
+          <button
+            onClick={() => setStage('full')}
+            className="w-full rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-sm font-semibold text-slate-600"
+          >
+            查看完整关系解析
           </button>
           <button onClick={restart} className="w-full rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-xs text-slate-500">
             再测一次
