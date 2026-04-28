@@ -7,7 +7,15 @@ import IndexBar from './components/IndexBar';
 
 type Stage = 'home' | 'quiz' | 'loading' | 'preview' | 'full' | 'poster';
 
-const loadingSteps = ['检测聊天依赖度...', '分析关系稳定性...', '识别隐藏相处模式...', '生成你们的关系真名...'];
+const loadingSteps = [
+  '正在调取你们的聊天气氛值...💬',
+  '正在捕捉暧昧小动作与嘴硬证据...🛰️',
+  '正在比对你们的关系隐藏剧情线...🎬',
+  '关系真名已进入揭晓倒计时...✨'
+];
+
+const optionStickers = ['🫧', '💘', '🎀', '🪄'];
+const previewFlavorLabels = ['暧昧浓度', '稳稳安心值', '心动甜度', '上头值'];
 
 function App() {
   const [stage, setStage] = useState<Stage>('home');
@@ -67,73 +75,85 @@ function App() {
   return (
     <MobileFrame>
       {stage === 'home' && (
-        <div className="flex min-h-[calc(100vh-4rem)] flex-col justify-between py-6">
+        <div className="relative flex min-h-[calc(100vh-4rem)] flex-col justify-between py-6">
+          <div className="sticker sticker-left">🫶</div>
+          <div className="sticker sticker-right">💌</div>
           <div className="space-y-5 text-center">
-            <p className="mx-auto inline-flex items-center gap-1 rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-medium text-violet-500 shadow-sm">
-              <span>✨</span> 关系实验室 H5
+            <p className="mx-auto inline-flex items-center gap-1 rounded-full border border-white/80 bg-white/80 px-3 py-1 text-xs font-semibold text-violet-500 shadow-sm">
+              <span>✨</span> 今日关系小剧场
             </p>
-            <div className="animate-float-up mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/80 bg-white/70 text-3xl shadow-[0_10px_30px_rgba(168,85,247,0.2)]">
+            <div className="animate-float-up mx-auto flex h-24 w-24 items-center justify-center rounded-[30px] border border-white/85 bg-white/80 text-4xl shadow-[0_14px_34px_rgba(168,85,247,0.24)]">
               💞
             </div>
             <div className="space-y-3">
-              <h1 className="text-4xl font-black leading-tight text-slate-800">测测你和TA<br />到底是什么关系</h1>
+              <h1 className="text-4xl font-black leading-tight text-slate-800">
+                测测你和TA<br />
+                到底是哪种关系番
+              </h1>
               <p className="mx-auto max-w-xs text-sm leading-relaxed text-slate-500">
-                恋人、队友、灵魂拍档，还是你一个人的心动连续剧？20题看清你们的关系真相。
+                不是严肃问卷，是一场有点上头的关系剧情测试。20题后，你会拿到你们的关系真名＋暴击文案。
               </p>
             </div>
-            <div className="rounded-3xl border border-white/80 bg-white/75 p-4 text-left text-sm leading-relaxed text-slate-600 shadow-[0_12px_35px_rgba(139,92,246,0.12)] backdrop-blur">
-              <p className="font-semibold text-violet-500">测试说明</p>
-              <p className="mt-1">请在脑海里锁定一个你在意的人，按直觉作答。结果仅供娱乐，但往往会有点戳心。</p>
+            <div className="rounded-3xl border border-white/80 bg-white/80 p-4 text-left text-sm leading-relaxed text-slate-600 shadow-[0_12px_35px_rgba(139,92,246,0.12)] backdrop-blur">
+              <p className="font-semibold text-violet-500">进入测试前 · 小贴士</p>
+              <p className="mt-1">心里先锁定一个人，按直觉选就行。越快越准，嘴硬会被系统看出来哦 👀</p>
             </div>
           </div>
 
           <div className="space-y-3 pt-8">
             <button
               onClick={() => setStage('quiz')}
-              className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-5 py-4 text-lg font-bold text-white shadow-[0_14px_28px_rgba(139,92,246,0.35)] transition hover:brightness-105 active:scale-[0.98]"
+              className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-5 py-4 text-lg font-black text-white shadow-[0_14px_28px_rgba(139,92,246,0.35)] transition hover:brightness-105 active:scale-[0.98]"
             >
-              开始测试
+              🎉 开始玩，测关系
             </button>
-            <p className="text-center text-xs text-slate-400">用时约 2 分钟 · 不需要登录</p>
+            <p className="text-center text-xs text-slate-400">用时约 2 分钟 · 无需登录 · 纯娱乐更上头</p>
           </div>
         </div>
       )}
 
       {stage === 'quiz' && (
-        <div className="space-y-6 py-4">
-          <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between text-xs font-semibold text-violet-500">
-              <span>第 {currentQuestion + 1} 题</span>
-              <span>共 {QUESTIONS.length} 题</span>
+        <div className="space-y-6 py-4 animate-enter-up">
+          <div className="rounded-3xl border border-white/85 bg-white/80 p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between text-xs font-semibold text-violet-500">
+              <span>剧情进度 · 第 {currentQuestion + 1} 题</span>
+              <span>{QUESTIONS.length} 题中</span>
             </div>
-            <div className="h-2.5 rounded-full bg-violet-100">
+            <div className="mb-3 h-3 rounded-full bg-violet-100/90 p-[2px]">
               <div
-                className="h-2.5 rounded-full bg-gradient-to-r from-fuchsia-400 to-blue-400 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-fuchsia-400 via-violet-500 to-sky-400 transition-all duration-500"
                 style={{ width: `${((currentQuestion + 1) / QUESTIONS.length) * 100}%` }}
               />
             </div>
+            <p className="text-[11px] text-slate-400">别想太久，第一反应通常就是你们关系的真实弹幕。</p>
           </div>
 
-          <div className="rounded-3xl border border-white/80 bg-white/80 p-5 shadow-[0_10px_35px_rgba(30,41,59,0.08)]">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Question</p>
-            <h2 className="text-[1.35rem] font-bold leading-snug text-slate-800">{QUESTIONS[currentQuestion].title}</h2>
+          <div className="rounded-3xl border border-white/85 bg-white/85 p-5 shadow-[0_10px_35px_rgba(30,41,59,0.08)] animate-enter-up">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Relationship Question</p>
+            <h2 className="text-[1.35rem] font-black leading-snug text-slate-800">{QUESTIONS[currentQuestion].title}</h2>
           </div>
 
           <div className="space-y-3 pb-4">
-            {QUESTIONS[currentQuestion].options.map((option) => {
+            {QUESTIONS[currentQuestion].options.map((option, idx) => {
               const isSelected = selectedOptionId === option.id;
               return (
                 <button
                   key={option.id}
                   onClick={() => onAnswer(option.id)}
-                  className={`w-full rounded-2xl border px-4 py-4 text-left text-sm leading-relaxed transition duration-200 active:scale-[0.99] ${
+                  className={`group w-full rounded-3xl border px-4 py-4 text-left text-sm leading-relaxed transition duration-200 active:scale-[0.99] ${
                     isSelected
-                      ? 'scale-[1.01] border-violet-400 bg-violet-50 shadow-[0_10px_24px_rgba(139,92,246,0.25)]'
-                      : 'border-white/80 bg-white/80 shadow-[0_8px_22px_rgba(148,163,184,0.14)] hover:border-violet-200'
+                      ? 'scale-[1.01] border-violet-400 bg-violet-50 shadow-[0_12px_26px_rgba(139,92,246,0.25)]'
+                      : 'border-white/85 bg-white/85 shadow-[0_8px_22px_rgba(148,163,184,0.14)] hover:border-violet-200'
                   }`}
                 >
-                  <span className={`mr-2 font-semibold ${isSelected ? 'text-violet-600' : 'text-violet-500'}`}>{option.label}.</span>
-                  <span className={isSelected ? 'text-slate-700' : 'text-slate-600'}>{option.text}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{optionStickers[idx % optionStickers.length]}</span>
+                    <span className={`font-semibold ${isSelected ? 'text-violet-600' : 'text-violet-500'}`}>{option.label}.</span>
+                    {isSelected && (
+                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-600">已锁定</span>
+                    )}
+                  </div>
+                  <p className={`mt-1 pl-6 ${isSelected ? 'text-slate-700' : 'text-slate-600'}`}>{option.text}</p>
                 </button>
               );
             })}
@@ -143,11 +163,12 @@ function App() {
 
       {stage === 'loading' && (
         <div className="flex min-h-[calc(100vh-6rem)] flex-col items-center justify-center text-center">
-          <div className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/75 p-8 shadow-[0_14px_34px_rgba(124,58,237,0.14)]">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-violet-100">
-              <div className="animate-pulse-soft h-12 w-12 rounded-full border-[6px] border-violet-400 border-t-transparent" />
+          <div className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/80 p-8 shadow-[0_14px_34px_rgba(124,58,237,0.14)]">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Relationship Scanner</p>
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100">
+              <div className="animate-pulse-soft flex h-14 w-14 items-center justify-center rounded-full border-[6px] border-violet-400 border-t-transparent text-xl">🔮</div>
             </div>
-            <h2 className="mt-6 text-xl font-black text-slate-800">正在生成你们的关系画像...</h2>
+            <h2 className="mt-6 text-xl font-black text-slate-800">正在偷偷分析你们的关系剧情...</h2>
             <p className="mt-3 text-sm text-slate-500 transition-all duration-300">{loadingSteps[loadingTextIndex]}</p>
             <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-violet-100">
               <div className="h-1.5 w-1/2 animate-[pulse_1.2s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-fuchsia-400 to-blue-400" />
@@ -157,106 +178,107 @@ function App() {
       )}
 
       {stage === 'preview' && (
-        <div className="space-y-5 py-4">
-          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">免费初判</p>
-          <div className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-[0_12px_30px_rgba(124,58,237,0.12)]">
-            <h2 className="text-2xl font-black text-slate-800">关系初判：{result.subtitle}</h2>
+        <div className="space-y-5 py-4 animate-enter-up">
+          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">免费初判 · 先看一点点</p>
+          <div className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_12px_30px_rgba(124,58,237,0.12)]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-violet-400">你们现在像</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-800">{result.subtitle}</h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-600">{result.freePreview}</p>
           </div>
 
           <div className="grid grid-cols-1 gap-3">
-            {indexes.map((item) => (
-              <IndexBar key={item.key} label={item.key} value={item.value} />
+            {indexes.map((item, idx) => (
+              <IndexBar key={item.key} label={previewFlavorLabels[idx] ?? item.key} value={item.value} />
             ))}
           </div>
 
-          <p className="rounded-2xl border border-dashed border-violet-300 bg-violet-50/70 p-3 text-sm text-violet-600">🔍 模糊提示：{result.teaser}</p>
+          <p className="rounded-2xl border border-dashed border-violet-300 bg-violet-50/70 p-3 text-sm text-violet-600">🧩 剧透边角料：{result.teaser}</p>
 
           <div className="space-y-2 rounded-3xl border border-violet-200 bg-gradient-to-r from-fuchsia-100/80 via-violet-100/70 to-sky-100/80 p-4 shadow-[0_14px_28px_rgba(139,92,246,0.18)]">
             <button
               onClick={() => setStage('full')}
-              className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-5 py-4 text-base font-bold text-white shadow-[0_8px_20px_rgba(124,58,237,0.35)] active:scale-[0.99]"
+              className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-5 py-4 text-base font-black text-white shadow-[0_8px_20px_rgba(124,58,237,0.35)] active:scale-[0.99]"
             >
-              1元解锁关系真名 + 双人关系海报
+              🔓 1元解锁关系真名 + 双人关系海报
             </button>
-            <p className="text-center text-xs text-violet-500">限时解锁 · 立即查看完整报告</p>
+            <p className="text-center text-xs text-violet-500">很多人都说：看到最终结果会忍不住转给TA</p>
           </div>
         </div>
       )}
 
       {stage === 'full' && (
-        <div className="space-y-4 py-4">
-          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">完整结果</p>
+        <div className="space-y-4 py-4 animate-enter-up">
+          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">完整结果 · 关系揭晓</p>
 
-          <section className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400">1. 关系真名</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-800">{result.name}</h2>
+          <section className="rounded-3xl border border-violet-200 bg-gradient-to-br from-white/90 to-violet-50/90 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-violet-400">关系真名 · NOW SHOWING</p>
+            <h2 className="mt-2 text-3xl font-black text-slate-800">{result.name}</h2>
           </section>
 
           <section className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400">2. 双人角色</p>
+            <p className="text-xs font-semibold text-slate-400">双人角色卡</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-700">{result.duoRoles}</p>
           </section>
 
-          <section className="rounded-3xl border border-violet-200 bg-violet-50/70 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-violet-500">3. 一句话暴击</p>
-            <p className="mt-2 text-base font-semibold leading-relaxed text-violet-700">{result.oneLineHit}</p>
+          <section className="rounded-3xl border border-violet-200 bg-violet-50/80 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-violet-500">一句话暴击</p>
+            <p className="mt-2 text-lg font-bold leading-relaxed text-violet-700">“{result.oneLineHit}”</p>
           </section>
 
           <section className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400">4. 完整解释</p>
+            <p className="text-xs font-semibold text-slate-400">关系剧情解析</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{result.fullExplanation}</p>
           </section>
 
           <section className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400">5. 隐藏问题</p>
+            <p className="text-xs font-semibold text-slate-400">隐藏卡点提醒</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{result.hiddenIssue}</p>
           </section>
 
           <section className="rounded-3xl border border-white/80 bg-white/85 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400">6. 行动建议</p>
+            <p className="text-xs font-semibold text-slate-400">下一步建议</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{result.actionAdvice}</p>
           </section>
 
           <button
             onClick={() => setStage('poster')}
-            className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-4 py-3 text-sm font-bold text-white"
+            className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-4 py-3 text-sm font-black text-white"
           >
-            查看关系海报
+            🖼️ 查看关系海报
           </button>
-          <button onClick={restart} className="w-full rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-xs text-slate-500">
+          <button onClick={restart} className="w-full rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-xs text-slate-500">
             重新测试
           </button>
         </div>
       )}
 
       {stage === 'poster' && (
-        <div className="space-y-4 py-4">
-          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">关系海报</p>
+        <div className="space-y-4 py-4 animate-enter-up">
+          <p className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-600">关系海报 · 可分享</p>
 
-          <div className="rounded-[28px] border border-white/70 bg-gradient-to-b from-[#3f2b7f] via-[#5f42b5] to-[#7f78ff] p-5 text-white shadow-[0_22px_44px_rgba(79,70,229,0.32)]">
-            <p className="text-center text-[11px] uppercase tracking-[0.26em] text-white/80">Relationship Test</p>
+          <div className="poster-shell rounded-[30px] border border-white/70 p-5 text-white shadow-[0_22px_44px_rgba(79,70,229,0.32)]">
+            <p className="text-center text-[11px] uppercase tracking-[0.26em] text-white/85">Relationship Test Poster</p>
             <h3 className="mt-3 text-center text-3xl font-black leading-tight">{result.name}</h3>
-            <p className="mt-3 rounded-2xl bg-white/15 px-4 py-2 text-center text-sm text-white/90">{result.duoRoles}</p>
+            <p className="mt-3 rounded-2xl bg-white/15 px-4 py-2 text-center text-sm font-semibold text-white/95">{result.duoRoles}</p>
             <p className="mt-3 rounded-2xl bg-white/20 p-3 text-sm leading-relaxed text-white">“{result.oneLineHit}”</p>
 
             <div className="mt-4 grid gap-2">
-              {indexes.map((item) => (
-                <IndexBar key={item.key} label={item.key} value={item.value} />
+              {indexes.map((item, idx) => (
+                <IndexBar key={item.key} label={previewFlavorLabels[idx] ?? item.key} value={item.value} dark />
               ))}
             </div>
 
             <p className="mt-4 text-sm leading-relaxed text-white/95">{result.posterCopy}</p>
-            <p className="mt-2 text-xs text-white/75">视觉建议：{result.posterVisual}</p>
+            <p className="mt-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/80">视觉建议：{result.posterVisual}</p>
           </div>
 
           <button
-            onClick={() => window.alert('请长按截图保存海报～')}
-            className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-4 py-3 text-base font-bold text-white shadow-[0_12px_24px_rgba(124,58,237,0.35)]"
+            onClick={() => window.alert('请长按截图保存海报，发给TA看看你们的关系真名～')}
+            className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-blue-500 px-4 py-3 text-base font-black text-white shadow-[0_12px_24px_rgba(124,58,237,0.35)]"
           >
-            保存海报
+            📸 保存海报
           </button>
-          <button onClick={restart} className="w-full rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-xs text-slate-500">
+          <button onClick={restart} className="w-full rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-xs text-slate-500">
             再测一次
           </button>
         </div>
