@@ -15,7 +15,7 @@ import {
   StickerLabel
 } from './components/DesignSystem';
 
-type Stage = 'home' | 'quiz' | 'loading' | 'preview' | 'checkout' | 'paymentSuccess' | 'poster' | 'full';
+type Stage = 'home' | 'quiz' | 'loading' | 'preview' | 'checkout' | 'result';
 type PaymentMethod = 'wechat' | 'alipay';
 
 type PersistedState = {
@@ -31,7 +31,7 @@ const loadingSteps = ['正在扫描你们的隐藏关系信号...', '分析上�
 const optionStickers = ['🫧', '💘', '🎀', '🪄'];
 const previewFlavorLabels = ['上头值', '操心值', '甜度值', '默契值'];
 const AUTO_NEXT_DELAY = 280;
-const PAYMENT_DELAY = 1500;
+const PAYMENT_DELAY = 1000;
 
 const parseDuoRoles = (duoRoles: string) => {
   const parts = duoRoles.split(/[｜|]/).map((part) => part.trim()).filter(Boolean);
@@ -152,7 +152,7 @@ function App() {
     paymentTimerRef.current = window.setTimeout(() => {
       setIsPaying(false);
       setIsPaid(true);
-      setStage('paymentSuccess');
+      setStage('result');
     }, PAYMENT_DELAY);
   };
 
@@ -293,26 +293,13 @@ function App() {
             </div>
           </SoftCard>
           <GradientButton onClick={onConfirmPayment} disabled={isPaying}>
-            {isPaying ? '支付确认中...' : '确认支付 ¥1.00'}
+            {isPaying ? '解锁中...' : '确认支付 ¥1.00'}
           </GradientButton>
           <p className="text-center text-xs text-violet-500">内测体验中，不会真实扣费。</p>
         </div>
       )}
 
-      {stage === 'paymentSuccess' && (
-        <div className="animate-enter-up flex min-h-[calc(100vh-5rem)] items-center">
-          <SoftCard className="w-full text-center">
-            <p className="text-5xl">✅</p>
-            <h2 className="mt-3 text-3xl font-black text-slate-800">解锁成功</h2>
-            <p className="mt-2 text-sm text-slate-600">你的隐藏关系海报已经生成。</p>
-            <div className="mt-5">
-              <GradientButton onClick={() => setStage('poster')}>查看我的关系海报</GradientButton>
-            </div>
-          </SoftCard>
-        </div>
-      )}
-
-      {stage === 'poster' && (
+      {stage === 'result' && (
         <div className="animate-enter-up space-y-4 py-4">
           <ResultBadge>你和TA的隐藏关系</ResultBadge>
           <PosterCard>
@@ -329,17 +316,7 @@ function App() {
             <p className="mt-4 text-sm">{result.posterCopy}</p>
           </PosterCard>
           <GradientButton onClick={() => window.alert('请长按截图保存海报～')}>长按截图保存海报</GradientButton>
-          <button
-            onClick={() => setStage('full')}
-            className="w-full rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-sm font-semibold text-slate-600"
-          >
-            查看完整关系解析
-          </button>
-        </div>
-      )}
 
-      {stage === 'full' && (
-        <div className="animate-enter-up space-y-4 py-4">
           <ResultBadge>完整关系解析</ResultBadge>
           <SectionCard title="关系真名" icon="💘">
             <h2 className="text-3xl font-black text-slate-800">{result.name}</h2>
