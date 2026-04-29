@@ -19,6 +19,7 @@ type Stage = 'home' | 'quiz' | 'loading' | 'preview' | 'checkout' | 'result';
 type PaymentMethod = 'wechat' | 'alipay';
 
 type PersistedState = {
+  appStateVersion: string;
   stage: Stage;
   currentQuestion: number;
   answers: Record<number, string>;
@@ -27,6 +28,7 @@ type PersistedState = {
 };
 
 const STORAGE_KEY = 'relationship-test-state-v1';
+const APP_STATE_VERSION = 'v2';
 const loadingSteps = ['正在扫描你们的隐藏关系信号...', '分析上头浓度...', '检测嘴硬含量...', '生成关系真名...'];
 const optionStickers = ['🫧', '💘', '🎀', '🪄'];
 const previewFlavorLabels = ['上头值', '操心值', '甜度值', '默契值'];
@@ -57,15 +59,48 @@ function App() {
   const autoNextTimerRef = useRef<number | null>(null);
   const paymentTimerRef = useRef<number | null>(null);
 
+  const resetToHomeState = () => {
+    setAnswers({});
+    setCurrentQuestion(0);
+    setPaymentMethod('wechat');
+    setIsPaid(false);
+    setStage('home');
+    window.localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const hasAnyAnswer = (candidate: unknown): candidate is Record<number, string> =>
+    !!candidate && typeof candidate === 'object' && Object.keys(candidate).length > 0;
+
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
 
     try {
       const parsed = JSON.parse(raw) as Partial<PersistedState>;
-      if (parsed.answers) setAnswers(parsed.answers);
-      if (typeof parsed.currentQuestion === 'number') setCurrentQuestion(parsed.currentQuestion);
-      if (parsed.stage) setStage(parsed.stage);
+      if (parsed.appStateVersion !== APP_STATE_VERSION) {
+        resetToHomeState();
+        return;
+      }
+
+      const validStages: Stage[] = ['home', 'quiz', 'loading', 'preview', 'checkout', 'result'];
+      const safeStage = parsed.stage && validStages.includes(parsed.stage) ? parsed.stage : 'home';
+      const maxQuestionIndex = QUESTIONS.length - 1;
+      const safeCurrentQuestion =
+        typeof parsed.currentQuestion === 'number' && parsed.currentQuestion >= 0 && parsed.currentQuestion <= maxQuestionIndex
+          ? parsed.currentQuestion
+          : 0;
+      const safeAnswers = parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {};
+
+      const requiresAnsweredState: Stage[] = ['loading', 'preview', 'checkout', 'result'];
+      const hasAnswered = hasAnyAnswer(safeAnswers);
+      if ((safeStage === 'quiz' && safeCurrentQuestion > 0 && !hasAnswered) || (requiresAnsweredState.includes(safeStage) && !hasAnswered)) {
+        resetToHomeState();
+        return;
+      }
+
+      setAnswers(safeAnswers);
+      setCurrentQuestion(safeCurrentQuestion);
+      setStage(safeStage);
       if (parsed.paymentMethod === 'wechat' || parsed.paymentMethod === 'alipay') setPaymentMethod(parsed.paymentMethod);
       if (parsed.paid) setIsPaid(true);
     } catch {
@@ -75,6 +110,7 @@ function App() {
 
   useEffect(() => {
     const state: PersistedState = {
+      appStateVersion: APP_STATE_VERSION,
       stage,
       currentQuestion,
       answers,
@@ -119,12 +155,7 @@ function App() {
 
   const restart = () => {
     clearTimers();
-    setAnswers({});
-    setCurrentQuestion(0);
-    setPaymentMethod('wechat');
-    setIsPaid(false);
-    setStage('home');
-    window.localStorage.removeItem(STORAGE_KEY);
+    resetToHomeState();
   };
 
   const onAnswer = (optionId: string) => {
