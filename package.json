@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "simulate:results": "tsc --module nodenext --target es2022 --moduleResolution nodenext --outDir .tmp-sim scripts/simulate-results.ts src/utils/devSimulation.ts src/utils/evaluator.ts src/data/questions.ts src/data/results.ts src/types.ts && node .tmp-sim/scripts/simulate-results.js"
   },
   "dependencies": {
     "react": "^18.3.1",
