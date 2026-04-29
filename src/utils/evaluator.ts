@@ -26,36 +26,53 @@ type Norm = Record<DimensionKey, number>;
 
 const between = (value: number, min: number, max: number) => value >= min && value <= max;
 
-const pickByFallback = (norm: Norm): string => {
+const byPriority = (rules: Array<[boolean, string]>): string | null => {
+  const matched = rules.find(([ok]) => ok);
+  return matched?.[1] ?? null;
+};
+
+const pickByFallback = (n: Norm): string => {
   const candidates = [
-    { id: 'sticky-love', score: norm.intimacy + norm.sweetness + norm.obsession },
-    { id: 'iron-bros', score: norm.stability + norm.chemistry - norm.sweetness * 0.3 },
-    { id: 'blind-box', score: norm.drain + (100 - norm.stability) + (100 - norm.certainty) },
-    { id: 'project-squad', score: norm.projectSense + norm.stability },
-    { id: 'auto-drive', score: norm.chemistry + norm.stability + (100 - norm.expression) }
+    { id: 'life-partner-inc', score: n.stability + n.projectSense + n.care - n.sweetness * 0.2 },
+    { id: 'sticky-love', score: n.intimacy + n.sweetness + n.obsession - n.drain * 0.5 },
+    { id: 'battle-bond', score: n.stability + n.resilience + n.care },
+    { id: 'iron-bros', score: n.stability + n.chemistry + n.resilience - n.sweetness * 0.3 },
+    { id: 'auto-drive', score: n.chemistry + n.stability + (100 - n.expression) },
+    { id: 'project-squad', score: n.projectSense + n.stability + n.care },
+    { id: 'blind-box', score: n.drain + (100 - n.stability) + (100 - n.certainty) }
   ];
 
   return candidates.sort((a, b) => b.score - a.score)[0]?.id ?? RESULT_ORDER[0];
 };
 
 const matchRules = (n: Norm): string | null => {
-  if (n.care >= 72 && n.drain >= 66) return 'motherboard-overheat';
-  if (n.care >= 72 && n.initiativeGap >= 62) return 'little-ancestor-coo';
-  if (n.stability >= 72 && n.chemistry >= 68 && n.sweetness <= 46) return 'iron-bros';
-  if (n.intimacy >= 72 && n.sweetness >= 72 && n.obsession >= 58) return 'sticky-love';
-  if (n.stability >= 62 && n.projectSense >= 60) return 'project-squad';
-  if (n.stability <= 42 && n.obsession >= 66 && n.drain >= 62) return 'human-ac';
-  if (n.obsession >= 70 && between(n.progress, 45, 62) && n.certainty <= 48) return 'tai-chi';
-  if (n.obsession >= 68 && n.progress <= 40 && n.initiativeGap >= 60) return 'one-hot-one-dead';
-  if (n.obsession >= 70 && n.certainty <= 42) return 'schrodinger-lover';
-  if (n.intimacy >= 60 && n.progress <= 44) return 'almost-install';
-  if (n.stability >= 65 && n.projectSense >= 55 && n.sweetness <= 44) return 'life-partner-inc';
-  if (between(n.stability, 48, 66) && n.intimacy <= 44 && n.sweetness <= 42) return 'roommate-mode';
-  if (n.stability >= 70 && n.resilience >= 68) return 'battle-bond';
-  if (n.chemistry >= 70 && n.stability >= 68 && n.expression <= 44) return 'auto-drive';
-  if (n.toughMouth >= 68 && n.intimacy + n.obsession >= 132) return 'tough-love';
-  if (n.stability <= 44 && n.drain >= 64 && n.certainty <= 42) return 'blind-box';
-  return null;
+  const lowSweetFunctional = n.sweetness <= 46 && n.intimacy <= 48 && n.expression <= 46;
+  const stableLongTerm = n.stability >= 68 && n.projectSense >= 56;
+  const intenseUnstable = n.stability <= 44 && n.drain >= 64 && n.certainty <= 44;
+
+  const strongTrigger = byPriority([
+    [n.care >= 84 && n.drain >= 72 && n.projectSense >= 54, 'motherboard-overheat'],
+    [n.care >= 78 && n.initiativeGap >= 68 && n.progress <= 56, 'little-ancestor-coo'],
+    [n.initiativeGap >= 74 && n.obsession >= 68 && n.progress <= 42 && n.certainty <= 54, 'one-hot-one-dead'],
+    [n.stability >= 74 && n.resilience >= 72 && n.care >= 62, 'battle-bond'],
+    [n.stability >= 74 && n.chemistry >= 72 && n.sweetness <= 52 && n.resilience >= 66, 'iron-bros'],
+    [stableLongTerm && n.care >= 66 && n.progress >= 62, 'life-partner-inc'],
+    [n.stability >= 66 && n.projectSense >= 68 && n.progress >= 62 && n.expression <= 56, 'project-squad'],
+    [n.stability >= 66 && n.chemistry >= 72 && n.expression <= 42 && n.sweetness <= 58, 'auto-drive'],
+    [n.toughMouth >= 70 && n.intimacy >= 62 && n.obsession >= 62 && n.stability >= 52, 'tough-love'],
+    [n.intimacy >= 76 && n.sweetness >= 76 && n.obsession >= 62 && n.progress >= 58 && n.drain <= 58, 'sticky-love'],
+    [n.intimacy >= 64 && n.progress <= 46 && n.certainty <= 58 && n.sweetness >= 52, 'almost-install'],
+    [intenseUnstable && n.obsession >= 66, 'blind-box'],
+    [n.stability <= 46 && n.obsession >= 68 && n.drain >= 66 && n.expression <= 52, 'human-ac'],
+    [n.obsession >= 68 && between(n.progress, 46, 64) && n.certainty <= 50 && n.initiativeGap <= 64, 'tai-chi'],
+    [n.obsession >= 70 && n.certainty <= 42 && n.progress <= 60, 'schrodinger-lover'],
+    [between(n.stability, 52, 72) && n.intimacy <= 46 && n.sweetness <= 44 && n.projectSense <= 60, 'roommate-mode']
+  ]);
+
+  if (strongTrigger === 'sticky-love' && lowSweetFunctional) return null;
+  if (strongTrigger === 'blind-box' && stableLongTerm) return null;
+
+  return strongTrigger;
 };
 
 export const evaluateAnswers = (answers: Answers): EvaluationResult => {
